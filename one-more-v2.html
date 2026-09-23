@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="theme-color" content="#090b12">
+<title>ONE MORE — Prototype Lab 2</title>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#090b12;color:#fff;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;touch-action:none}
+button{font:inherit;color:inherit}
+#app{height:100dvh;max-width:700px;margin:auto;position:relative;background:linear-gradient(160deg,#0b1020,#111a31)}
+.screen{position:absolute;inset:0;display:none}.screen.active{display:block}
+#menu{overflow:auto;padding:calc(env(safe-area-inset-top) + 28px) 20px calc(env(safe-area-inset-bottom) + 30px)}
+.brand{font-size:44px;font-weight:900;letter-spacing:-3px;margin:18px 0 4px}.brand i{color:#61f2c2;font-style:normal}
+.sub{color:#aeb8cf;font-size:16px;line-height:1.4;margin-bottom:22px}
+.card{width:100%;text-align:left;border:1px solid #354666;background:#17233b;border-radius:20px;padding:17px;margin:10px 0}
+.card:active{transform:scale(.985)}.card b{display:block;font-size:20px;margin-bottom:5px}.card span{color:#b6c1d8;font-size:14px;line-height:1.35}
+.tag{display:inline-block;font-size:11px!important;color:#61f2c2!important;border:1px solid #356f68;border-radius:999px;padding:3px 7px;margin-top:8px}
+#game{background:#080b12}
+canvas{display:block;width:100%;height:100%}
+.topbar{position:absolute;z-index:4;left:0;right:0;top:0;padding:calc(env(safe-area-inset-top) + 10px) 14px 0;display:flex;justify-content:space-between;align-items:center;pointer-events:none}
+.iconbtn{pointer-events:auto;border:1px solid #46536b;background:#111827cc;border-radius:999px;width:42px;height:42px;font-size:22px}
+.score{text-align:center;font-weight:900;font-size:24px;text-shadow:0 2px 12px #000}.score small{display:block;font-size:11px;color:#9da9c2;font-weight:600}
+#hint{position:absolute;z-index:3;left:18px;right:18px;bottom:calc(env(safe-area-inset-bottom) + 22px);text-align:center;color:#d4d9e5;font-size:14px;pointer-events:none;text-shadow:0 2px 8px #000}
+#overlay{position:absolute;z-index:6;inset:0;background:#05070bcc;display:none;align-items:center;justify-content:center;padding:25px}
+#overlay.show{display:flex}.panel{width:100%;max-width:420px;background:#141c2d;border:1px solid #3d4a62;border-radius:25px;padding:25px;text-align:center}
+.panel h2{font-size:31px;margin:0 0 8px}.panel p{color:#aeb8cf;line-height:1.4}.big{font-size:54px;font-weight:900;margin:12px}
+.action{border:0;background:#61f2c2;color:#07110e;border-radius:16px;font-weight:900;padding:15px 22px;width:100%;font-size:18px;margin-top:10px}
+.secondary{background:#26334d;color:white}
+.flash{animation:flash .16s}@keyframes flash{50%{filter:brightness(2.2)}}
+</style>
+</head>
+<body><div id="app">
+<section id="menu" class="screen active">
+  <div class="brand">ONE MORE<i>.</i></div>
+  <div class="sub">Fünf neue Kernmechaniken. Keine Rohre, kein Flappy-Prinzip. Tippe ein Spiel an und teste nur eine Frage: <b>Will ich sofort noch einen Versuch?</b></div>
+  <button class="card" onclick="start('hundred')"><b>100 BLIND</b><span>Die Zahl verschwindet. Stoppe möglichst exakt bei 100.</span><span class="tag">Timing + Bauchgefühl</span></button>
+  <button class="card" onclick="start('dont')"><b>DON'T.</b><span>Das Spiel provoziert dich. Tippe nur beim echten grünen Signal – niemals auf die Fakes.</span><span class="tag">Impulskontrolle</span></button>
+  <button class="card" onclick="start('memory')"><b>BLINK PATH</b><span>Du siehst den sicheren Weg nur für einen Augenblick. Danach gehst du aus dem Gedächtnis.</span><span class="tag">Memory + Risiko</span></button>
+  <button class="card" onclick="start('balance')"><b>DEAD STILL</b><span>Halte das Handy möglichst ruhig. Jeder Wackler vergrößert die instabile Kugel.</span><span class="tag">Gerätesensor + Nerven</span></button>
+  <button class="card" onclick="start('slice')"><b>ONE CUT</b><span>Eine einzige Wischbewegung. Triff möglichst viele Ziele in einer Linie.</span><span class="tag">Skill + Perfektion</span></button>
+</section>
+
+<section id="game" class="screen">
+ <canvas id="c"></canvas>
+ <div class="topbar"><button class="iconbtn" onclick="home()">‹</button><div class="score" id="score"></div><button class="iconbtn" onclick="restart()">↻</button></div>
+ <div id="hint"></div>
+ <div id="overlay"><div class="panel"><h2 id="ot"></h2><p id="op"></p><div class="big" id="ov"></div><button class="action" onclick="restart()">NOCHMAL</button><button class="action secondary" onclick="home()">ANDERES SPIEL</button></div></div>
+</section>
+</div>
+<script>
+const menu=document.querySelector('#menu'), game=document.querySelector('#game'), c=document.querySelector('#c'), ctx=c.getContext('2d');
+const scoreEl=document.querySelector('#score'),hint=document.querySelector('#hint'),overlay=document.querySelector('#overlay');
+let mode=null, raf=0, state={}, W=0,H=0,dpr=1;
+function resize(){dpr=Math.min(devicePixelRatio||1,2); W=innerWidth>700?700:innerWidth; H=innerHeight; c.width=W*dpr;c.height=H*dpr;c.style.width=W+'px';c.style.height=H+'px';ctx.setTransform(dpr,0,0,dpr,0,0)}
+addEventListener('resize',resize);resize();
+function start(m){mode=m;menu.classList.remove('active');game.classList.add('active');restart()}
+function home(){cancelAnimationFrame(raf);stopSensors();overlay.classList.remove('show');game.classList.remove('active');menu.classList.add('active');mode=null}
+function restart(){cancelAnimationFrame(raf);stopSensors();overlay.classList.remove('show');state={}; init[mode]&&init[mode]()}
+function end(title,value,text){cancelAnimationFrame(raf);stopSensors();document.querySelector('#ot').textContent=title;document.querySelector('#ov').textContent=value;document.querySelector('#op').textContent=text;overlay.classList.add('show')}
+function clear(bg='#090d18'){ctx.fillStyle=bg;ctx.fillRect(0,0,W,H)}
+function txt(s,x,y,size=30,align='center',color='#fff'){ctx.fillStyle=color;ctx.font=`900 ${size}px -apple-system,BlinkMacSystemFont,sans-serif`;ctx.textAlign=align;ctx.textBaseline='middle';ctx.fillText(s,x,y)}
+function best(key,v){let b=+(localStorage.getItem(key)||0);if(v>b){localStorage.setItem(key,v);return v}return b}
+const init={};
+
+// 1 100 BLIND
+init.hundred=()=>{state={v:0,speed:18,last:performance.now(),visible:true,hideAt:45+Math.random()*20,done:false};hint.textContent='Tippe irgendwo, wenn du glaubst: JETZT ist 100.';scoreEl.innerHTML='100 BLIND<small>STOPPE EXAKT</small>';c.onpointerdown=()=>{if(state.done)return;state.done=true;let err=Math.abs(100-state.v), pts=Math.max(0,Math.round(1000-err*55));let b=best('b100',pts);end(err<.5?'UNGLAUBLICH.':err<3?'FAST PERFEKT':'GESTOPPT',state.v.toFixed(2),`Abstand zu 100: ${err.toFixed(2)} · Score ${pts} · Best ${b}`)};loopHundred()}
+function loopHundred(t=performance.now()){let dt=Math.min(.04,(t-state.last)/1000);state.last=t;state.speed+=dt*7.5;state.v+=state.speed*dt;if(state.v>=130&&!state.done){state.done=true;end('ZU SPÄT',state.v.toFixed(1),'100 ist längst vorbei.')}clear('#080b12');let p=Math.min(1,state.v/130);ctx.fillStyle='#18233a';ctx.fillRect(28,H*.58,W-56,12);ctx.fillStyle='#61f2c2';ctx.fillRect(28,H*.58,(W-56)*p,12);if(state.v<state.hideAt)txt(state.v.toFixed(2),W/2,H*.42,64);else{txt('?',W/2,H*.42,90,'center','#64708a');txt('NICHT MEHR SCHAUEN',W/2,H*.5,14,'center','#9ca8c0')}raf=requestAnimationFrame(loopHundred)}
+
+// 2 DON'T
+init.dont=()=>{state={round:0,score:0,phase:'wait',timer:0,last:performance.now(),targetAt:performance.now()+1000+Math.random()*1800,fakeAt:performance.now()+350+Math.random()*700};hint.textContent='Nur bei GRÜN tippen. Alles andere ist eine Falle.';scoreEl.innerHTML='0<small>DON’T TAP THE FAKE</small>';c.onpointerdown=()=>{if(state.phase==='green'){state.score++;state.round++;state.phase='wait';let n=performance.now();state.targetAt=n+650+Math.random()*1500;state.fakeAt=n+250+Math.random()*Math.max(200,state.targetAt-n-350);scoreEl.innerHTML=`${state.score}<small>STREAK</small>`}else end('ERWISCHT.',state.score,`Du hast auf einen Fake reagiert. Best ${best('bdont',state.score)}`)};loopDont()}
+function loopDont(t=performance.now()){clear('#080b12');if(state.phase==='wait'&&t>=state.targetAt){state.phase='green';state.greenUntil=t+Math.max(330,700-state.score*22)}if(state.phase==='green'&&t>state.greenUntil){end('ZU LANGSAM',state.score,`Das echte Signal war da. Best ${best('bdont',state.score)}`);return}
+let fake=state.phase==='wait'&&Math.abs(t-state.fakeAt)<260;
+if(state.phase==='green'){clear('#0b6b4f');txt('JETZT!',W/2,H/2,70)}
+else if(fake){let kinds=['TIPP!','JETZT?','⚠','GO!','3…2…1'];txt(kinds[state.round%kinds.length],W/2,H/2,64,'center','#ff5964');}
+else{txt('NICHT TIPPEN',W/2,H/2,26,'center','#59657c')}
+raf=requestAnimationFrame(loopDont)}
+
+// 3 BLINK PATH
+init.memory=()=>{let cols=5,rows=7,path=[],x=Math.floor(cols/2);for(let y=rows-1;y>=0;y--){path.push({x,y});x=Math.max(0,Math.min(cols-1,x+([-1,0,1][Math.floor(Math.random()*3)])))}state={cols,rows,path,player:{...path[0]},idx:0,showUntil:performance.now()+1100,score:0};hint.textContent='Merke dir den leuchtenden Weg. Danach: tippe links/rechts auf den Bildschirm.';scoreEl.innerHTML='0<small>BLINK PATH</small>';c.onpointerdown=e=>{if(performance.now()<state.showUntil)return;let dir=e.clientX<W/2?-1:1;let next=state.path[state.idx+1];if(!next)return;let nx=state.player.x+dir;if(nx===next.x){state.player={...next};state.idx++;state.score++;scoreEl.innerHTML=`${state.score}<small>SCHRITTE</small>`;if(state.idx===state.path.length-1){let s=state.score;best('bmem',s);setTimeout(()=>init.memory(),220)}}else end('FALSCHER SCHRITT',state.score,`Der Weg lag woanders. Best ${best('bmem',state.score)}`)};loopMemory()}
+function loopMemory(t=performance.now()){clear('#0b1020');let cw=(W-40)/state.cols,ch=Math.min(65,(H-190)/state.rows),ox=20,oy=(H-state.rows*ch)/2;for(let y=0;y<state.rows;y++)for(let x=0;x<state.cols;x++){ctx.strokeStyle='#26344d';ctx.strokeRect(ox+x*cw+3,oy+y*ch+3,cw-6,ch-6)}
+if(t<state.showUntil){ctx.fillStyle='#61f2c2';for(const p of state.path)ctx.fillRect(ox+p.x*cw+8,oy+p.y*ch+8,cw-16,ch-16)}
+let p=state.player;ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(ox+p.x*cw+cw/2,oy+p.y*ch+ch/2,10,0,Math.PI*2);ctx.fill();raf=requestAnimationFrame(loopMemory)}
+
+// 4 DEAD STILL
+let sensorHandler=null;
+function stopSensors(){if(sensorHandler){removeEventListener('deviceorientation',sensorHandler);sensorHandler=null}}
+init.balance=async()=>{state={started:false,base:null,wobble:0,score:0,last:performance.now()};hint.textContent='Halte dein Handy ruhig. Tippe einmal zum Kalibrieren.';scoreEl.innerHTML='0.0<small>SEKUNDEN</small>';c.onpointerdown=async()=>{if(state.started)return;if(typeof DeviceOrientationEvent!=='undefined'&&typeof DeviceOrientationEvent.requestPermission==='function'){try{let r=await DeviceOrientationEvent.requestPermission();if(r!=='granted')return end('SENSOR GESPERRT','—','iOS hat den Bewegungssensor nicht freigegeben.')}catch(e){return}}state.started=true;hint.textContent='NICHT WACKELN.';sensorHandler=e=>{if(!state.base)state.base={b:e.beta||0,g:e.gamma||0};let d=Math.hypot((e.beta||0)-state.base.b,(e.gamma||0)-state.base.g);state.wobble+=Math.max(0,d-1.2)*.018;state.base.b=state.base.b*.97+(e.beta||0)*.03;state.base.g=state.base.g*.97+(e.gamma||0)*.03};addEventListener('deviceorientation',sensorHandler)};loopBalance()}
+function loopBalance(t=performance.now()){let dt=(t-state.last)/1000;state.last=t;if(state.started){state.score+=dt;state.wobble=Math.max(0,state.wobble-dt*.08);scoreEl.innerHTML=`${state.score.toFixed(1)}<small>SEKUNDEN</small>`;if(state.wobble>1){let s=+state.score.toFixed(1);end('GEWACKELT',s+'s',`Best ${best('bbal',s)}s`);return}}clear('#090c15');let r=34+state.wobble*75;ctx.beginPath();ctx.arc(W/2,H/2,r,0,Math.PI*2);ctx.fillStyle=state.wobble>.65?'#ff5964':'#61f2c2';ctx.fill();ctx.strokeStyle='#fff8';ctx.lineWidth=2;ctx.beginPath();ctx.arc(W/2,H/2,38,0,Math.PI*2);ctx.stroke();raf=requestAnimationFrame(loopBalance)}
+
+// 5 ONE CUT
+init.slice=()=>{let targets=[];for(let i=0;i<10;i++)targets.push({x:45+Math.random()*(W-90),y:150+Math.random()*(H-260),r:14+Math.random()*9});state={targets,drag:false,a:null,b:null};hint.textContent='Eine Wischlinie. Loslassen = Schnitt. Triff so viele Kreise wie möglich.';scoreEl.innerHTML='ONE CUT<small>EINE LINIE</small>';c.onpointerdown=e=>{state.drag=true;state.a={x:e.clientX,y:e.clientY};state.b={...state.a}};c.onpointermove=e=>{if(state.drag)state.b={x:e.clientX,y:e.clientY}};c.onpointerup=e=>{if(!state.drag)return;state.drag=false;state.b={x:e.clientX,y:e.clientY};let hit=0;for(const q of state.targets)if(distSeg(q,state.a,state.b)<=q.r+5)hit++;let b=best('bcut',hit);end(hit>=8?'SAUBERER CUT':hit>=5?'GUTER CUT':'ZU WENIG',hit+'/10',`Mit nur einer Linie getroffen. Best ${b}/10`)};loopSlice()}
+function distSeg(p,a,b){let dx=b.x-a.x,dy=b.y-a.y,l=dx*dx+dy*dy;if(!l)return Math.hypot(p.x-a.x,p.y-a.y);let t=Math.max(0,Math.min(1,((p.x-a.x)*dx+(p.y-a.y)*dy)/l));return Math.hypot(p.x-(a.x+t*dx),p.y-(a.y+t*dy))}
+function loopSlice(){clear('#0a0f1c');for(const q of state.targets){ctx.beginPath();ctx.arc(q.x,q.y,q.r,0,Math.PI*2);ctx.fillStyle='#61f2c2';ctx.fill();ctx.beginPath();ctx.arc(q.x,q.y,q.r*.45,0,Math.PI*2);ctx.fillStyle='#0a0f1c';ctx.fill()}if(state.drag&&state.a&&state.b){ctx.strokeStyle='#fff';ctx.lineWidth=5;ctx.lineCap='round';ctx.beginPath();ctx.moveTo(state.a.x,state.a.y);ctx.lineTo(state.b.x,state.b.y);ctx.stroke()}raf=requestAnimationFrame(loopSlice)}
+</script></body></html>

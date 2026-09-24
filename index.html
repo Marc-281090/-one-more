@@ -3,48 +3,86 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
-  <meta name="theme-color" content="#6657e8">
-  <meta name="description" content="Blind Path – ein farbenfrohes Memory-Spiel für kurze, knifflige Runden.">
+  <meta name="theme-color" content="#5547c7">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="format-detection" content="telephone=no">
+  <meta name="description" content="Blind Path – merke dir den Pfad und finde ihn wieder.">
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icon.svg">
   <link rel="stylesheet" href="styles.css">
   <title>Blind Path</title>
 </head>
 <body>
+<svg class="svg-sprite" aria-hidden="true">
+  <symbol id="i-chart" viewBox="0 0 24 24"><path d="M5 20V10m7 10V4m7 16v-7"/></symbol>
+  <symbol id="i-settings" viewBox="0 0 24 24"><path d="M12 15.2a3.2 3.2 0 1 0 0-6.4 3.2 3.2 0 0 0 0 6.4Z"/><path d="m19.4 15 .1.1 1.2 2.1-2.5 2.5-2.1-1.2-.2-.1a8 8 0 0 1-2.1.9V22h-3.6v-2.5a8 8 0 0 1-2.1-.9l-.2.1-2.1 1.2-2.5-2.5 1.2-2.1.1-.2A8 8 0 0 1 5.8 13H3.4V9.5h2.4a8 8 0 0 1 .9-2.1l-.1-.2L5.4 5.1l2.5-2.5L10 3.8l.2.1a8 8 0 0 1 2.1-.9V.7h3.6V3a8 8 0 0 1 2.1.9l.2-.1 2.1-1.2 2.5 2.5-1.2 2.1-.1.2a8 8 0 0 1 .9 2.1h2.4V13h-2.4a8 8 0 0 1-1 2Z" transform="scale(.82) translate(2.6 2.3)"/></symbol>
+  <symbol id="i-play" viewBox="0 0 24 24"><path d="m9 6 9 6-9 6V6Z" fill="currentColor" stroke="none"/></symbol>
+  <symbol id="i-back" viewBox="0 0 24 24"><path d="m15 5-7 7 7 7"/></symbol>
+  <symbol id="i-pause" viewBox="0 0 24 24"><path d="M9 6v12M15 6v12"/></symbol>
+  <symbol id="i-volume" viewBox="0 0 24 24"><path d="M5 10v4h4l5 4V6l-5 4H5Zm12-1.5a5 5 0 0 1 0 7"/></symbol>
+  <symbol id="i-muted" viewBox="0 0 24 24"><path d="M5 10v4h4l5 4V6l-5 4H5Zm12 0 5 5m0-5-5 5"/></symbol>
+  <symbol id="i-heart" viewBox="0 0 24 24"><path d="M20.8 5.8a5.5 5.5 0 0 0-7.8 0L12 6.9l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8L12 22l8.8-8.4a5.5 5.5 0 0 0 0-7.8Z" fill="currentColor" stroke="none"/></symbol>
+  <symbol id="i-spark" viewBox="0 0 24 24"><path d="m12 2 1.6 6.4L20 10l-6.4 1.6L12 18l-1.6-6.4L4 10l6.4-1.6L12 2Zm7 14 .7 2.3L22 19l-2.3.7L19 22l-.7-2.3L16 19l2.3-.7L19 16Z" fill="currentColor" stroke="none"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12 4.5 4.5L19 7"/></symbol>
+  <symbol id="i-close" viewBox="0 0 24 24"><path d="m6 6 12 12M18 6 6 18"/></symbol>
+  <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 3 5 6v5c0 4.6 2.9 8.2 7 10 4.1-1.8 7-5.4 7-10V6l-7-3Z"/><path d="m9 12 2 2 4-5"/></symbol>
+  <symbol id="i-retry" viewBox="0 0 24 24"><path d="M19 8V4l-2 2a8 8 0 1 0 2.3 8M17 6h-4"/></symbol>
+  <symbol id="i-trophy" viewBox="0 0 24 24"><path d="M8 4h8v4a4 4 0 0 1-8 0V4Zm4 8v5m-4 3h8M8 6H4v2a4 4 0 0 0 4 4m8-6h4v2a4 4 0 0 1-4 4"/></symbol>
+  <symbol id="i-warning" viewBox="0 0 24 24"><path d="m12 3 10 18H2L12 3Z"/><path d="M12 9v5m0 3v.1"/></symbol>
+</svg>
+
 <main id="app">
-  <div class="ambient ambient-one"></div><div class="ambient ambient-two"></div>
+  <div class="ambient ambient-one"></div><div class="ambient ambient-two"></div><div class="ambient-grid"></div>
 
   <section id="home-screen" class="screen active" aria-labelledby="game-title">
-    <header class="home-top"><button class="icon-button" data-open="stats" aria-label="Statistik öffnen">▥</button><button class="icon-button" data-open="settings" aria-label="Einstellungen öffnen">⚙</button></header>
+    <header class="home-top">
+      <button class="icon-button" data-open="stats" aria-label="Statistik öffnen"><svg><use href="#i-chart"/></svg></button>
+      <button class="icon-button" data-open="settings" aria-label="Einstellungen öffnen"><svg><use href="#i-settings"/></svg></button>
+    </header>
     <div class="hero">
       <div class="logo-mark" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div>
-      <p class="eyebrow">MEMORY · SKILL · FLOW</p>
+      <p class="eyebrow">MERKEN · FINDEN · MEISTERN</p>
       <h1 id="game-title">BLIND<br><span>PATH</span></h1>
-      <p class="tagline">Merken. Nachspüren. Weiterkommen.</p>
+      <p class="tagline">Wie weit trägt dich dein Gedächtnis?</p>
     </div>
     <div class="home-actions">
-      <button id="play-button" class="primary-button"><span class="play-icon">▶</span><span><b>SPIELEN</b><small id="continue-label">Ab Stage 1</small></span></button>
-      <div class="best-card"><span>BESTLEISTUNG</span><strong><span id="home-best">1</span><small> STAGE</small></strong><div class="mini-path" aria-hidden="true"><i></i><i></i><i></i><i></i></div></div>
+      <div class="record-strip"><span>DEIN REKORD</span><strong>STAGE <b id="home-best">1</b></strong><div class="record-path" aria-hidden="true"><i></i><i></i><i></i><i></i></div></div>
+      <button id="play-button" class="primary-button"><span class="button-icon"><svg><use href="#i-play"/></svg></span><span><b>SPIELEN</b><small>Neuen Versuch starten</small></span></button>
     </div>
-    <footer>Offline spielbar · Dein Fortschritt bleibt auf diesem Gerät</footer>
+    <footer><svg><use href="#i-shield"/></svg> Offline · Fortschritt nur auf diesem Gerät</footer>
   </section>
 
   <section id="game-screen" class="screen" aria-label="Spielfeld">
     <header class="game-header">
-      <button id="pause-button" class="icon-button glass" aria-label="Pause">Ⅱ</button>
+      <button id="pause-button" class="icon-button glass" aria-label="Spiel pausieren"><svg><use href="#i-pause"/></svg></button>
       <div class="stage-display"><span>STAGE</span><strong id="stage-value">1</strong></div>
-      <button id="sound-quick" class="icon-button glass" aria-label="Sound umschalten">♪</button>
+      <button id="sound-quick" class="icon-button glass" aria-label="Ton ausschalten"><svg><use href="#i-volume"/></svg></button>
     </header>
-    <div class="status-row"><div id="lives" class="lives" aria-label="3 Leben"></div><div class="streak"><span>✦</span> <b id="streak-value">0</b> STREAK</div></div>
+    <div class="status-row"><div id="lives" class="lives" aria-label="3 Leben"></div><div class="streak"><svg><use href="#i-spark"/></svg><b id="streak-value">0</b> SERIE</div></div>
     <div class="phase-wrap"><div id="phase-pill" class="phase-pill"><span></span><b id="phase-title">MERKEN</b></div><p id="phase-copy">Präge dir die Reihenfolge ein</p></div>
-    <div id="board-wrap"><div id="board" role="grid" aria-label="Pfad-Raster"></div><div id="countdown-ring"><span id="countdown">3</span></div></div>
-    <div class="progress-wrap"><span id="progress-label">PFAD 0 / 4</span><div class="progress-track"><i id="progress-bar"></i></div></div>
+    <div id="board-wrap"><div id="board" role="grid" aria-label="Pfad-Raster"></div></div>
+    <div class="progress-wrap"><span id="progress-label">PFAD 0 VON 4</span><div class="progress-track"><i id="progress-bar"></i></div></div>
   </section>
 
-  <section id="stats-screen" class="screen sheet-screen" aria-labelledby="stats-title"><header><button class="back-button" data-back aria-label="Zurück">‹</button><div><p class="eyebrow">DEIN FORTSCHRITT</p><h2 id="stats-title">Statistik</h2></div></header><div id="stats-grid" class="stats-grid"></div><button class="primary-button compact" data-back>ZURÜCK</button></section>
-  <section id="settings-screen" class="screen sheet-screen" aria-labelledby="settings-title"><header><button class="back-button" data-back aria-label="Zurück">‹</button><div><p class="eyebrow">SO SPIELST DU</p><h2 id="settings-title">Einstellungen</h2></div></header><div class="settings-list"><button class="toggle-row" data-setting="sound"><span><b>Sound</b><small>Kurze, befriedigende Spieltöne</small></span><i></i></button><button class="toggle-row" data-setting="haptics"><span><b>Haptik</b><small>Sanftes Feedback beim Tippen</small></span><i></i></button><button class="toggle-row" data-setting="motion"><span><b>Animationen</b><small>Partikel und Bewegungen</small></span><i></i></button></div><div class="how-card"><b>So geht’s</b><ol><li>Merke dir den leuchtenden Pfad.</li><li>Tippe danach alle Felder der Reihe nach.</li><li>Bei einem Fehler siehst du denselben Pfad erneut.</li></ol></div><button class="text-button" id="reset-progress">Fortschritt zurücksetzen</button><button class="primary-button compact" data-back>FERTIG</button></section>
+  <section id="stats-screen" class="screen sheet-screen" aria-labelledby="stats-title">
+    <header class="sheet-header"><button class="back-button" data-back aria-label="Zurück zum Start"><svg><use href="#i-back"/></svg></button><div><p class="eyebrow">DEIN FORTSCHRITT</p><h2 id="stats-title">Statistik</h2></div></header>
+    <div id="stats-grid" class="stats-grid"></div>
+  </section>
 
-  <div id="overlay" class="overlay" aria-hidden="true"><div class="dialog" role="dialog" aria-modal="true" aria-labelledby="dialog-title"><div id="dialog-icon" class="dialog-icon">✦</div><p id="dialog-kicker" class="eyebrow"></p><h2 id="dialog-title"></h2><p id="dialog-copy"></p><div id="dialog-score" class="dialog-score"></div><button id="dialog-primary" class="primary-button compact"></button><button id="dialog-secondary" class="text-button"></button></div></div>
+  <section id="settings-screen" class="screen sheet-screen" aria-labelledby="settings-title">
+    <header class="sheet-header"><button class="back-button" data-back aria-label="Zurück zum Start"><svg><use href="#i-back"/></svg></button><div><p class="eyebrow">SPIELERLEBNIS</p><h2 id="settings-title">Einstellungen</h2></div></header>
+    <div class="settings-list">
+      <button class="toggle-row" data-setting="sound"><span><b>Ton</b><small>Unterschiedliche Signale im Spiel</small></span><i aria-hidden="true"></i></button>
+      <button class="toggle-row" data-setting="haptics"><span><b>Haptik</b><small>Vibration, sofern das Gerät sie unterstützt</small></span><i aria-hidden="true"></i></button>
+      <button class="toggle-row" data-setting="motion"><span><b>Animationen</b><small>Bewegungen und Partikeleffekte</small></span><i aria-hidden="true"></i></button>
+    </div>
+    <div class="how-card"><b>In drei Schritten</b><ol><li>Präge dir den leuchtenden Pfad ein.</li><li>Tippe alle Felder in derselben Reihenfolge.</li><li>Nach einem Fehler erscheint derselbe Pfad erneut.</li></ol></div>
+    <div class="danger-zone"><div><b>Lokale Spieldaten</b><small>Rekord, Statistik und Einstellungen löschen</small></div><button id="reset-progress" class="danger-button"><svg><use href="#i-warning"/></svg>Zurücksetzen</button></div>
+  </section>
+
+  <div id="overlay" class="overlay" aria-hidden="true"><div class="dialog" role="dialog" aria-modal="true" aria-labelledby="dialog-title"><div id="dialog-icon" class="dialog-icon"><svg><use href="#i-spark"/></svg></div><p id="dialog-kicker" class="eyebrow"></p><h2 id="dialog-title"></h2><p id="dialog-copy"></p><div id="dialog-score" class="dialog-score"></div><button id="dialog-primary" class="primary-button compact"></button><button id="dialog-secondary" class="secondary-button"></button></div></div>
   <div id="toast" role="status" aria-live="polite"></div><div id="particles" aria-hidden="true"></div>
 </main>
 <script type="module" src="src/app.js"></script>

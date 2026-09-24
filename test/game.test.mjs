@@ -1,0 +1,5 @@
+import test from'node:test';import assert from'node:assert/strict';import{stageConfig,generatePath,isValidPath}from'../src/game.js';import{sanitize}from'../src/storage.js';
+test('all generated paths are finite, unique and adjacent',()=>{for(let stage=1;stage<=250;stage++){const cfg=stageConfig(stage);for(let seed=0;seed<20;seed++)assert.ok(isValidPath(generatePath(cfg,seed),cfg),`stage ${stage}, seed ${seed}`)}});
+test('same seed creates the same retry path',()=>{const cfg=stageConfig(42);assert.deepEqual(generatePath(cfg,12345),generatePath(cfg,12345))});
+test('early stages are humane and progression is bounded',()=>{assert.equal(stageConfig(1).length,4);assert.ok(stageConfig(1).reveal>=2500);assert.ok(stageConfig(999).cols<=6);assert.ok(stageConfig(999).rows<=7)});
+test('damaged saves are safely normalized',()=>{const d=sanitize({highestStage:-8,settings:{sound:'yes'},stats:{correct:-4}});assert.equal(d.highestStage,1);assert.equal(d.settings.sound,true);assert.equal(d.stats.correct,0)});

@@ -1,0 +1,5 @@
+export const DEFAULT_DATA={version:1,highestStage:1,highScore:0,unlocked:['violet'],tutorialDone:false,settings:{sound:true,haptics:true,motion:true},stats:{runs:0,stagesCleared:0,correct:0,attempts:0,bestStreak:0,totalSeconds:0}};
+const clone=o=>JSON.parse(JSON.stringify(o));
+export function sanitize(raw){const d=clone(DEFAULT_DATA);if(!raw||typeof raw!=='object')return d;d.highestStage=Math.max(1,Math.min(9999,Number(raw.highestStage)||1));d.highScore=Math.max(0,Number(raw.highScore)||0);d.tutorialDone=Boolean(raw.tutorialDone);if(raw.settings)for(const k of Object.keys(d.settings))if(typeof raw.settings[k]==='boolean')d.settings[k]=raw.settings[k];if(raw.stats)for(const k of Object.keys(d.stats))d.stats[k]=Math.max(0,Number(raw.stats[k])||0);if(Array.isArray(raw.unlocked))d.unlocked=raw.unlocked.filter(x=>typeof x==='string').slice(0,30);return d}
+export function loadData(){try{return sanitize(JSON.parse(localStorage.getItem('blindPathSave')))}catch{return clone(DEFAULT_DATA)}}
+export function saveData(data){try{localStorage.setItem('blindPathSave',JSON.stringify(sanitize(data)));return true}catch{return false}}

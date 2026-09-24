@@ -1,102 +1,51 @@
 <!doctype html>
 <html lang="de">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
-<meta name="theme-color" content="#080b12">
-<title>ONE MORE — V3</title>
-<style>
-*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#080b12;color:#fff;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;touch-action:none}
-button{font:inherit;color:inherit}
-#app{height:100dvh;max-width:700px;margin:auto;position:relative;background:linear-gradient(160deg,#0a1020,#111a31)}
-.screen{position:absolute;inset:0;display:none}.active{display:block}
-#menu{padding:calc(env(safe-area-inset-top) + 28px) 20px 30px;overflow:auto}
-h1{font-size:44px;letter-spacing:-3px;margin:20px 0 5px}h1 i{font-style:normal;color:#61f2c2}
-.sub{color:#aab5cb;line-height:1.45;margin-bottom:22px}
-.card{width:100%;border:1px solid #354765;background:#17243d;border-radius:21px;padding:18px;margin:11px 0;text-align:left}
-.card b{font-size:21px;display:block;margin-bottom:5px}.card span{font-size:14px;color:#b9c3d6;line-height:1.35}
-.card em{display:inline-block;font-style:normal;font-size:11px;color:#61f2c2;border:1px solid #397166;border-radius:99px;padding:4px 8px;margin-top:9px}
-canvas{width:100%;height:100%;display:block}
-.top{position:absolute;z-index:4;left:12px;right:12px;top:calc(env(safe-area-inset-top) + 10px);display:flex;align-items:center;justify-content:space-between;pointer-events:none}
-.top button{pointer-events:auto;width:43px;height:43px;border-radius:50%;border:1px solid #43506a;background:#101725dd;font-size:23px}
-#hud{text-align:center;font-weight:900;font-size:20px;text-shadow:0 2px 10px #000}#hud small{display:block;color:#9aa7c0;font-size:11px}
-#lives{letter-spacing:3px;color:#ff6873}
-#hint{position:absolute;left:18px;right:18px;bottom:calc(env(safe-area-inset-bottom) + 20px);z-index:3;text-align:center;color:#d3d9e6;font-size:14px;text-shadow:0 2px 8px #000;pointer-events:none}
-#modal{position:absolute;z-index:9;inset:0;background:#05070bd9;display:none;align-items:center;justify-content:center;padding:24px}
-#modal.show{display:flex}.panel{width:100%;max-width:430px;text-align:center;background:#141c2d;border:1px solid #3e4b64;border-radius:26px;padding:25px}
-.panel h2{font-size:30px;margin:0 0 7px}.panel p{color:#adb8cd;line-height:1.4}.value{font-size:48px;font-weight:900;margin:10px 0}
-.action{width:100%;border:0;border-radius:16px;padding:15px;margin-top:10px;font-size:18px;font-weight:900;background:#61f2c2;color:#07110e}.secondary{background:#26334d;color:white}
-</style></head>
-<body><div id="app">
-<section id="menu" class="screen active">
-<h1>ONE MORE<i>.</i></h1>
-<div class="sub">V3 — nur die drei Mechaniken, die Potenzial gezeigt haben. Jetzt mit Progression und sauberem Feedback.</div>
-<button class="card" onclick="start('blind')"><b>100 BLIND — STAGES</b><span>Triff wechselnde Zielzahlen blind. ±1 % reicht zum Weiterkommen. Drei Leben.</span><em>LEVEL · LEBEN · PERFECT BONUS</em></button>
-<button class="card" onclick="start('path')"><b>BLINK PATH — MEMORY</b><span>Merke dir den Pfad. Danach tippst du die Felder selbst in der richtigen Reihenfolge.</span><em>NEU GEBAUT · STEIGENDE LÄNGE</em></button>
-<button class="card" onclick="start('cut')"><b>ONE CUT — OPTIMAL</b><span>Ein Schnitt. Danach siehst du deine Linie und die beste gefundene Vergleichslinie.</span><em>DEIN CUT VS. OPTIMUM</em></button>
-</section>
-<section id="game" class="screen"><canvas id="c"></canvas>
-<div class="top"><button onclick="home()">‹</button><div id="hud"></div><button onclick="restart()">↻</button></div>
-<div id="hint"></div>
-<div id="modal"><div class="panel"><h2 id="mt"></h2><p id="mp"></p><div class="value" id="mv"></div><button class="action" id="next">WEITER</button><button class="action secondary" onclick="home()">MENÜ</button></div></div>
-</section></div>
-<script>
-const menu=document.querySelector('#menu'),game=document.querySelector('#game'),c=document.querySelector('#c'),x=c.getContext('2d'),hud=document.querySelector('#hud'),hint=document.querySelector('#hint'),modal=document.querySelector('#modal');
-let W,H,D,mode,state,raf=0;
-function size(){D=Math.min(devicePixelRatio||1,2);W=Math.min(innerWidth,700);H=innerHeight;c.width=W*D;c.height=H*D;c.style.width=W+'px';c.style.height=H+'px';x.setTransform(D,0,0,D,0,0)} size();addEventListener('resize',size);
-function clear(bg='#090d18'){x.fillStyle=bg;x.fillRect(0,0,W,H)}
-function text(s,a,b,z=30,col='#fff'){x.fillStyle=col;x.font=`900 ${z}px -apple-system,BlinkMacSystemFont,sans-serif`;x.textAlign='center';x.textBaseline='middle';x.fillText(s,a,b)}
-function start(m){mode=m;menu.classList.remove('active');game.classList.add('active');restart()}
-function home(){cancelAnimationFrame(raf);modal.classList.remove('show');game.classList.remove('active');menu.classList.add('active')}
-function restart(){cancelAnimationFrame(raf);modal.classList.remove('show');INIT[mode]()}
-function popup(t,v,p,cb,label='WEITER'){document.querySelector('#mt').textContent=t;document.querySelector('#mv').textContent=v;document.querySelector('#mp').textContent=p;let n=document.querySelector('#next');n.textContent=label;n.onclick=()=>{modal.classList.remove('show');cb&&cb()};modal.classList.add('show')}
-function save(k,v){let b=+(localStorage.getItem(k)||0);if(v>b)localStorage.setItem(k,v);return Math.max(b,v)}
-const INIT={};
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+  <meta name="theme-color" content="#6657e8">
+  <meta name="description" content="Blind Path – ein farbenfrohes Memory-Spiel für kurze, knifflige Runden.">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="styles.css">
+  <title>Blind Path</title>
+</head>
+<body>
+<main id="app">
+  <div class="ambient ambient-one"></div><div class="ambient ambient-two"></div>
 
-// BLIND
-const targets=[100,30,76,50,125,42,88,15,64,110,37.5,92,23,150,55.5];
-INIT.blind=()=>{state={stage:1,lives:3};blindRound()}
-function blindRound(){cancelAnimationFrame(raf);let target=targets[(state.stage-1)%targets.length], lvl=state.stage;
-state.r={target,v:0,speed:Math.max(8,target*.16)*(1+(lvl-1)*.035),accel:target*.045,hide:target*(.48+Math.random()*.18),last:performance.now(),done:false};
-hud.innerHTML=`STAGE ${state.stage} &nbsp; <span id="lives">${'♥'.repeat(state.lives)}</span><small>ZIEL ${target}</small>`;
-hint.textContent='Tippe zum Stoppen. Maximal ±1 % Abweichung.';
-c.onpointerdown=()=>blindStop();blindLoop()}
-function blindStop(){let r=state.r;if(r.done)return;r.done=true;let diff=Math.abs(r.v-r.target),pct=diff/r.target*100, perfect=pct<=.15,pass=pct<=1;
-if(pass){let bonus=perfect?' · PERFECT!':''; if(perfect&&state.lives<3)state.lives++; let val=`${r.v.toFixed(2)}`;state.stage++;save('blindStage',state.stage);popup(perfect?'PERFECT!':'GESCHAFFT',val,`${pct.toFixed(2)} % Abweichung${bonus}`,blindRound)}
-else{state.lives--;if(state.lives<=0){let reached=state.stage;popup('GAME OVER',`STAGE ${reached}`,`${pct.toFixed(2)} % daneben. Best: Stage ${save('blindBest',reached)}`,()=>{state={stage:1,lives:3};blindRound()},'NEUER RUN')}
-else popup('LEBEN VERLOREN',r.v.toFixed(2),`${pct.toFixed(2)} % Abweichung · ${state.lives} Leben übrig`,blindRound,'NOCHMAL')}}
-function blindLoop(t=performance.now()){let r=state.r,dt=Math.min(.04,(t-r.last)/1000);r.last=t;r.speed+=r.accel*dt;r.v+=r.speed*dt;clear();let max=r.target*1.35,p=Math.min(1,r.v/max);x.fillStyle='#1b2942';x.fillRect(28,H*.61,W-56,11);x.fillStyle='#61f2c2';x.fillRect(28,H*.61,(W-56)*p,11);
-if(r.v<r.hide)text(r.v.toFixed(2),W/2,H*.43,66);else{text('?',W/2,H*.43,90,'#66738e');text('BLIND',W/2,H*.51,14,'#9ca8c0')}
-if(r.v>max&&!r.done)blindStop();raf=requestAnimationFrame(blindLoop)}
+  <section id="home-screen" class="screen active" aria-labelledby="game-title">
+    <header class="home-top"><button class="icon-button" data-open="stats" aria-label="Statistik öffnen">▥</button><button class="icon-button" data-open="settings" aria-label="Einstellungen öffnen">⚙</button></header>
+    <div class="hero">
+      <div class="logo-mark" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div>
+      <p class="eyebrow">MEMORY · SKILL · FLOW</p>
+      <h1 id="game-title">BLIND<br><span>PATH</span></h1>
+      <p class="tagline">Merken. Nachspüren. Weiterkommen.</p>
+    </div>
+    <div class="home-actions">
+      <button id="play-button" class="primary-button"><span class="play-icon">▶</span><span><b>SPIELEN</b><small id="continue-label">Ab Stage 1</small></span></button>
+      <div class="best-card"><span>BESTLEISTUNG</span><strong><span id="home-best">1</span><small> STAGE</small></strong><div class="mini-path" aria-hidden="true"><i></i><i></i><i></i><i></i></div></div>
+    </div>
+    <footer>Offline spielbar · Dein Fortschritt bleibt auf diesem Gerät</footer>
+  </section>
 
-// PATH
-INIT.path=()=>{state={stage:1,lives:3};pathRound()}
-function pathRound(){cancelAnimationFrame(raf);let cols=Math.min(6,4+Math.floor((state.stage-1)/4)),rows=Math.min(8,5+Math.floor((state.stage-1)/3)),len=Math.min(cols*rows-2,3+state.stage);
-let cells=[],used=new Set(),cx=Math.floor(cols/2),cy=rows-1;cells.push({x:cx,y:cy});used.add(cx+','+cy);
-while(cells.length<len){let dirs=[[0,-1],[-1,0],[1,0],[0,-1]],choices=dirs.map(d=>({x:cx+d[0],y:cy+d[1]})).filter(q=>q.x>=0&&q.x<cols&&q.y>=0&&q.y<rows&&!used.has(q.x+','+q.y));
-if(!choices.length){ // restart generation cleanly
-cells=[];used.clear();cx=Math.floor(cols/2);cy=rows-1;cells.push({x:cx,y:cy});used.add(cx+','+cy);continue}
-let q=choices[Math.floor(Math.random()*choices.length)];cx=q.x;cy=q.y;cells.push(q);used.add(cx+','+cy)}
-state.r={cols,rows,cells,input:0,showUntil:performance.now()+Math.max(750,1450-state.stage*45),ready:false};
-hud.innerHTML=`STAGE ${state.stage} &nbsp; <span id="lives">${'♥'.repeat(state.lives)}</span><small>${len} FELDER MERKEN</small>`;hint.textContent='Pfad merken…';
-c.onpointerdown=e=>pathTap(e);pathLoop()}
-function pathTap(e){let r=state.r;if(performance.now()<r.showUntil)return;let g=grid(r),col=Math.floor((e.clientX-g.ox)/g.cw),row=Math.floor((e.clientY-g.oy)/g.ch);if(col<0||col>=r.cols||row<0||row>=r.rows)return;
-let want=r.cells[r.input];if(col===want.x&&row===want.y){r.input++;if(r.input===r.cells.length){state.stage++;save('pathBest',state.stage);popup('PFAD GESCHAFFT',`STAGE ${state.stage-1}`,'Nächster Pfad wird länger oder schwieriger.',pathRound)}}
-else{state.lives--;if(state.lives<=0)popup('GAME OVER',`STAGE ${state.stage}`,`Best: Stage ${save('pathBest',state.stage)}`,()=>{state={stage:1,lives:3};pathRound()},'NEUER RUN');else popup('FALSCHES FELD',`${state.lives} ♥`,'Der komplette Pfad wird neu erzeugt.',pathRound,'NOCHMAL')}}
-function grid(r){let cw=(W-30)/r.cols,ch=Math.min(cw,(H-190)/r.rows);return{cw,ch,ox:(W-cw*r.cols)/2,oy:(H-ch*r.rows)/2}}
-function pathLoop(t=performance.now()){let r=state.r,g=grid(r);clear('#0a1020');for(let yy=0;yy<r.rows;yy++)for(let xx=0;xx<r.cols;xx++){x.strokeStyle='#30405c';x.lineWidth=1;x.strokeRect(g.ox+xx*g.cw+3,g.oy+yy*g.ch+3,g.cw-6,g.ch-6)}
-if(t<r.showUntil){for(let i=0;i<r.cells.length;i++){let q=r.cells[i];x.fillStyle=i===0?'#fff':'#61f2c2';x.fillRect(g.ox+q.x*g.cw+8,g.oy+q.y*g.ch+8,g.cw-16,g.ch-16);text(String(i+1),g.ox+(q.x+.5)*g.cw,g.oy+(q.y+.5)*g.ch,15,'#07110e')}}else{hint.textContent=`Tippe den Pfad: ${r.input}/${r.cells.length}`;for(let i=0;i<r.input;i++){let q=r.cells[i];x.fillStyle='#61f2c255';x.fillRect(g.ox+q.x*g.cw+7,g.oy+q.y*g.ch+7,g.cw-14,g.ch-14)}}
-raf=requestAnimationFrame(pathLoop)}
+  <section id="game-screen" class="screen" aria-label="Spielfeld">
+    <header class="game-header">
+      <button id="pause-button" class="icon-button glass" aria-label="Pause">Ⅱ</button>
+      <div class="stage-display"><span>STAGE</span><strong id="stage-value">1</strong></div>
+      <button id="sound-quick" class="icon-button glass" aria-label="Sound umschalten">♪</button>
+    </header>
+    <div class="status-row"><div id="lives" class="lives" aria-label="3 Leben"></div><div class="streak"><span>✦</span> <b id="streak-value">0</b> STREAK</div></div>
+    <div class="phase-wrap"><div id="phase-pill" class="phase-pill"><span></span><b id="phase-title">MERKEN</b></div><p id="phase-copy">Präge dir die Reihenfolge ein</p></div>
+    <div id="board-wrap"><div id="board" role="grid" aria-label="Pfad-Raster"></div><div id="countdown-ring"><span id="countdown">3</span></div></div>
+    <div class="progress-wrap"><span id="progress-label">PFAD 0 / 4</span><div class="progress-track"><i id="progress-bar"></i></div></div>
+  </section>
 
-// CUT
-INIT.cut=()=>{let pts=[];for(let i=0;i<11;i++)pts.push({x:42+Math.random()*(W-84),y:145+Math.random()*(H-245),r:15+Math.random()*6});state={pts,drag:false,a:null,b:null,result:null};hud.innerHTML='ONE CUT<small>EIN VERSUCH</small>';hint.textContent='Ziehe genau eine gerade Linie durch möglichst viele Ziele.';c.onpointerdown=e=>{if(state.result)return;state.drag=true;state.a={x:e.clientX,y:e.clientY};state.b={...state.a}};c.onpointermove=e=>{if(state.drag)state.b={x:e.clientX,y:e.clientY}};c.onpointerup=e=>finishCut(e);cutLoop()}
-function dseg(p,a,b){let dx=b.x-a.x,dy=b.y-a.y,l=dx*dx+dy*dy;if(!l)return 1e9;let t=Math.max(0,Math.min(1,((p.x-a.x)*dx+(p.y-a.y)*dy)/l));return Math.hypot(p.x-a.x-t*dx,p.y-a.y-t*dy)}
-function countLine(a,b){return state.pts.reduce((n,p)=>n+(dseg(p,a,b)<=p.r+4),0)}
-function ideal(){let best={n:0,a:null,b:null};let ext=Math.max(W,H)*2;for(let i=0;i<state.pts.length;i++)for(let j=i+1;j<state.pts.length;j++){let p=state.pts[i],q=state.pts[j],dx=q.x-p.x,dy=q.y-p.y,L=Math.hypot(dx,dy)||1,ux=dx/L,uy=dy/L,a={x:p.x-ux*ext,y:p.y-uy*ext},b={x:p.x+ux*ext,y:p.y+uy*ext},n=countLine(a,b);if(n>best.n)best={n,a,b}}return best}
-function finishCut(e){if(!state.drag)return;state.drag=false;state.b={x:e.clientX,y:e.clientY};let n=countLine(state.a,state.b),opt=ideal();state.result={n,opt};save('cutBest',n);hint.textContent='WEISS = dein Schnitt · GRÜN = beste gefundene Linie';setTimeout(()=>popup(n===opt.n?'OPTIMAL!':'AUSWERTUNG',`${n}/${state.pts.length}`,`Beste gefundene Linie: ${opt.n}/${state.pts.length} · Dein Bestwert: ${save('cutBest',n)}`,INIT.cut,'NEUES FELD'),900)}
-function cutLoop(){clear('#090e1a');for(const p of state.pts){x.beginPath();x.arc(p.x,p.y,p.r,0,Math.PI*2);x.fillStyle='#61f2c2';x.fill();x.beginPath();x.arc(p.x,p.y,p.r*.43,0,Math.PI*2);x.fillStyle='#090e1a';x.fill()}
-if(state.a&&state.b){x.strokeStyle='#fff';x.lineWidth=5;x.lineCap='round';x.beginPath();x.moveTo(state.a.x,state.a.y);x.lineTo(state.b.x,state.b.y);x.stroke()}
-if(state.result){let o=state.result.opt;x.strokeStyle='#61f2c2';x.lineWidth=3;x.setLineDash([10,8]);x.beginPath();x.moveTo(o.a.x,o.a.y);x.lineTo(o.b.x,o.b.y);x.stroke();x.setLineDash([])}
-raf=requestAnimationFrame(cutLoop)}
-</script></body></html>
+  <section id="stats-screen" class="screen sheet-screen" aria-labelledby="stats-title"><header><button class="back-button" data-back aria-label="Zurück">‹</button><div><p class="eyebrow">DEIN FORTSCHRITT</p><h2 id="stats-title">Statistik</h2></div></header><div id="stats-grid" class="stats-grid"></div><button class="primary-button compact" data-back>ZURÜCK</button></section>
+  <section id="settings-screen" class="screen sheet-screen" aria-labelledby="settings-title"><header><button class="back-button" data-back aria-label="Zurück">‹</button><div><p class="eyebrow">SO SPIELST DU</p><h2 id="settings-title">Einstellungen</h2></div></header><div class="settings-list"><button class="toggle-row" data-setting="sound"><span><b>Sound</b><small>Kurze, befriedigende Spieltöne</small></span><i></i></button><button class="toggle-row" data-setting="haptics"><span><b>Haptik</b><small>Sanftes Feedback beim Tippen</small></span><i></i></button><button class="toggle-row" data-setting="motion"><span><b>Animationen</b><small>Partikel und Bewegungen</small></span><i></i></button></div><div class="how-card"><b>So geht’s</b><ol><li>Merke dir den leuchtenden Pfad.</li><li>Tippe danach alle Felder der Reihe nach.</li><li>Bei einem Fehler siehst du denselben Pfad erneut.</li></ol></div><button class="text-button" id="reset-progress">Fortschritt zurücksetzen</button><button class="primary-button compact" data-back>FERTIG</button></section>
+
+  <div id="overlay" class="overlay" aria-hidden="true"><div class="dialog" role="dialog" aria-modal="true" aria-labelledby="dialog-title"><div id="dialog-icon" class="dialog-icon">✦</div><p id="dialog-kicker" class="eyebrow"></p><h2 id="dialog-title"></h2><p id="dialog-copy"></p><div id="dialog-score" class="dialog-score"></div><button id="dialog-primary" class="primary-button compact"></button><button id="dialog-secondary" class="text-button"></button></div></div>
+  <div id="toast" role="status" aria-live="polite"></div><div id="particles" aria-hidden="true"></div>
+</main>
+<script type="module" src="src/app.js"></script>
+</body></html>
